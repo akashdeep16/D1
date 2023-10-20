@@ -1,0 +1,63 @@
+mysql> create database grade3304;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> use grade3304;
+Database changed
+mysql>  create table student_marks(roll int primary key,name varchar(50), total_marks int);
+Query OK, 0 rows affected (0.29 sec)
+
+mysql> create table result(roll int primary key,clas varchar(20));
+Query OK, 0 rows affected (0.23 sec)
+
+mysql> delimiter ;;
+mysql> create function process_grade(marks int)
+    -> returns varchar(20) deterministic
+    -> begin
+    -> declare grade varchar(20) default 'Pass';
+    -> if marks >= 1500 and marks <= 900 then
+    -> set grade = 'Distinction';
+    -> elseif marks >= 900 then
+    -> set grade = 'First Class';
+    -> elseif marks >= 825 then
+    -> set grade = 'Higher Second class';
+    -> end if;
+    -> return grade;
+    -> end;;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> create procedure submit_marks(in roll int,in name varchar(50), in marks int)
+    -> begin
+    -> declare grade varchar(20);
+    -> select process_grade(marks) into grade;
+    -> insert into student_marks values(roll, name, marks);
+    -> insert into result values(roll, grade);
+    -> end;;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> delimiter ;
+mysql> call submit_marks(2,'AAA',1200);
+Query OK, 1 row affected (0.07 sec)
+
+mysql> call submit_marks(6,'BBBB',902);
+Query OK, 1 row affected (0.14 sec)
+
+mysql> call submit_marks(90,'CCC',820);
+Query OK, 1 row affected (0.07 sec)
+
+mysql> call submit_marks(76,'DDD',843);
+Query OK, 1 row affected (0.12 sec)
+
+
+mysql> select result.roll, name, total_marks,clas  from student_marks, result where result.roll = student_marks.roll;
++------+------+-------------+---------------------+
+| roll | name | total_marks | clas                |
++------+------+-------------+---------------------+
+|    2 | AAA  |        1200 | First Class         |
+|    6 | BBBB |         902 | First Class         |
+|   76 | DDD  |         843 | Higher Second class |
+|   90 | CCC  |         820 | Pass                |
++------+------+-------------+---------------------+
+4 rows in set (0.00 sec)
+
+mysql> 
+

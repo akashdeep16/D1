@@ -1,0 +1,125 @@
+mysql> system clear
+mysql> create database 3329A7;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> use 3329A7;
+Database changed
+mysql> create table library (bookid int, book_name varchar(20), publication varchar(20));
+Query OK, 0 rows affected (0.18 sec)
+
+mysql> create table library_audit (sno int auto_increment primary key, old_book varchar(20), new_book varchar(20), operation varchar(20), time datetime);
+Query OK, 0 rows affected (0.22 sec)
+
+mysql> insert into library values(1,"TOC","Pub1");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into library values(2,"SPM","Pub2");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into library values(3,"DBMS","Pub3");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into library values(4,"CNS","Pub4");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> select *from library;
++--------+-----------+-------------+
+| bookid | book_name | publication |
++--------+-----------+-------------+
+|      1 | TOC       | Pub1        |
+|      2 | SPM       | Pub2        |
+|      3 | DBMS      | Pub3        |
+|      4 | CNS       | Pub4        |
++--------+-----------+-------------+
+4 rows in set (0.00 sec)
+
+mysql> select *from library_audit;
+Empty set (0.01 sec)
+
+mysql> delimiter //
+mysql> create trigger T_update
+    -> after update on library
+    -> for each row begin
+    -> declare action varchar(20);
+    -> declare newbook varchar(20);
+    -> declare oldbook varchar(20);
+    -> set oldbook=old.book_name;
+    -> set newbook=new.book_name;
+    -> set action='update';
+    -> insert into library_audit(old_book,new_book,operation,time)
+    -> values(oldbook,newbook,action,now());
+    -> end; //
+Query OK, 0 rows affected (0.08 sec)
+
+mysql> update library set book_name='SPOS' where bookid=2;
+    -> //
+Query OK, 1 row affected (0.09 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select *from library_audit;
+    -> //
++-----+----------+----------+-----------+---------------------+
+| sno | old_book | new_book | operation | time                |
++-----+----------+----------+-----------+---------------------+
+|   1 | SPM      | SPOS     | update    | 2022-09-21 12:10:44 |
++-----+----------+----------+-----------+---------------------+
+1 row in set (0.00 sec)
+
+mysql> update library set book_name='SPOS' where bookid=2;
+    -> //
+Query OK, 0 rows affected (0.03 sec)
+Rows matched: 1  Changed: 0  Warnings: 0
+
+mysql> select *from library_audit;
+    -> //
++-----+----------+----------+-----------+---------------------+
+| sno | old_book | new_book | operation | time                |
++-----+----------+----------+-----------+---------------------+
+|   1 | SPM      | SPOS     | update    | 2022-09-21 12:10:44 |
+|   2 | SPOS     | SPOS     | update    | 2022-09-21 12:11:50 |
++-----+----------+----------+-----------+---------------------+
+2 rows in set (0.00 sec)
+
+mysql> update library set book_name='HCI' where bookid=3;
+    -> //
+Query OK, 1 row affected (0.03 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select *from library_audit;
+    -> //
++-----+----------+----------+-----------+---------------------+
+| sno | old_book | new_book | operation | time                |
++-----+----------+----------+-----------+---------------------+
+|   1 | SPM      | SPOS     | update    | 2022-09-21 12:10:44 |
+|   2 | SPOS     | SPOS     | update    | 2022-09-21 12:11:50 |
+|   3 | DBMS     | HCI      | update    | 2022-09-21 12:12:09 |
++-----+----------+----------+-----------+---------------------+
+3 rows in set (0.00 sec)
+
+mysql> create trigger trigger_delete
+    -> after delete on library for each row begin
+    -> declare action varchar(20);
+    -> declare book varchar(20);
+    -> set book=old.book_name;
+    -> set action='delete';
+    -> insert into library_audit(old_book,operation,time) values(book,action,now());
+    -> end; //
+Query OK, 0 rows affected (0.07 sec)
+
+mysql> delete from library where bookid=4;
+    -> //
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select *from library_audit;
+    -> //
++-----+----------+----------+-----------+---------------------+
+| sno | old_book | new_book | operation | time                |
++-----+----------+----------+-----------+---------------------+
+|   1 | SPM      | SPOS     | update    | 2022-09-21 12:10:44 |
+|   2 | SPOS     | SPOS     | update    | 2022-09-21 12:11:50 |
+|   3 | DBMS     | HCI      | update    | 2022-09-21 12:12:09 |
+|   4 | CNS      | NULL     | delete    | 2022-09-21 12:13:41 |
++-----+----------+----------+-----------+---------------------+
+4 rows in set (0.00 sec)
+
+mysql> notee

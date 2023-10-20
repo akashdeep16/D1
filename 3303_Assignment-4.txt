@@ -1,0 +1,99 @@
+mysql> create database Library;
+Query OK, 1 row affected (0.10 sec)
+
+mysql> use Library;
+Database changed
+mysql> create table Borrower(Roll_no int, Name Varchar(25),DateofIssue date, NameofBook varchar(50), Status char(1));
+Query OK, 0 rows affected (0.34 sec)
+
+mysql> create table Fine(Roll_no int, DataofReturn date, Amount int);
+Query OK, 0 rows affected (0.33 sec)
+
+mysql> create database Library;
+Query OK, 1 row affected (0.10 sec)
+
+mysql> insert into Borrower values
+    -> (3303,'Abhishek','2022-07-10','Rich Dad Poor Dad', 'I'),
+    -> (3304,'Rana','2022-08-15','Grokking Algorithm', 'I'),
+    -> (3305,'Aditya','2022-08-05','CP Springer', 'I'),
+    -> (3310,'Rupendar','2022-07-17','CookBook', 'I'),
+    -> (3312,'Dheeraj','2022-09-02','Coding Interview Questions', 'I');
+Query OK, 5 rows affected (0.09 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> create procedure set_fine(in roll_no int)
+    -> begin
+    -> 	declare fine_amount int;
+    -> 	declare date_diff int;
+    -> 	declare issue_date date;
+    -> 	declare return_date date;
+    -> 	declare exit handler for sqlexception
+    -> 		select 'Unexpected Error!';
+    -> select DateofIssue into issue_date from Borrower where Borrower.Roll_no = roll_no;
+    -> select curdate() into return_date;
+    -> select datediff(return_date, issue_date) into date_diff;
+    -> set fine_amount = 0;
+    -> if date_diff >= 15 and date_diff =< 30 then
+    -> 	set fine_amount = date_diff * 5;
+    -> elseif date_diff > 30 then
+    -> 	set fine_amount = date_diff * 50;
+    -> else 
+    -> 	set fine_amount = 0;
+    -> end if;
+    -> insert into Fine values(roll_no, curdate(), fine_amount);
+    -> update Borrower set Status = 'R' where Borrower.Roll_no = roll_no;
+    -> end //
+Query OK, 0 rows affected (0.13 sec)
+
+mysql> delimiter ;
+
+mysql> call set_fine(3303);
+Query OK, 1 row affected (0.12 sec)
+
+mysql> call set_fine(3304);
+Query OK, 1 row affected (0.12 sec)
+
+mysql> call set_fine(3305);
+Query OK, 1 row affected (0.12 sec)
+
+mysql> select * from Borrower;
++---------+----------+-------------+----------------------------+--------+
+| Roll_no | Name     | DateofIssue | NameofBook                 | Status |
++---------+----------+-------------+----------------------------+--------+
+|    3303 | Abhishek | 2022-07-10  | Rich Dad Poor Dad          | R      |
+|    3304 | Rana     | 2022-08-15  | Grokking Algorithm         | R      |
+|    3305 | Aditya   | 2022-08-05  | CP Springer                | R      |
+|    3310 | Rupendar | 2022-07-17  | CookBook                   | I      |
+|    3312 | Dheeraj  | 2022-09-02  | Coding Interview Questions | I      |
++---------+----------+-------------+----------------------------+--------+
+5 rows in set (0.00 sec)
+
+mysql> select * from Fine;
++---------+--------------+--------+
+| Roll_no | DataofReturn | Amount |
++---------+--------------+--------+
+|    3303 | 2022-09-16   |   3400 |
+|    3304 | 2022-09-16   |   1600 |
+|    3305 | 2022-09-16   |   2100 |
++---------+--------------+--------+
+3 rows in set (0.00 sec)
+
+mysql> insert into Borrower values(3369,'Eminem','2022-08-29','Rap God','I');
+Query OK, 1 row affected (0.07 sec)
+
+mysql> call set_fine(3369);
+Query OK, 1 row affected (0.13 sec)
+
+mysql> select * from Fine;
++---------+--------------+--------+
+| Roll_no | DataofReturn | Amount |
++---------+--------------+--------+
+|    3303 | 2022-09-16   |   3400 |
+|    3304 | 2022-09-16   |   1600 |
+|    3305 | 2022-09-16   |   2100 |
+|    3312 | 2022-09-16   |      0 |
+|    3369 | 2022-09-16   |     90 |
++---------+--------------+--------+
+5 rows in set (0.00 sec)
+
+

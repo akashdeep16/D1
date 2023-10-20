@@ -1,0 +1,103 @@
+mysql> create database Grade;
+Query OK, 1 row affected (0.10 sec)
+
+mysql> use Grade;
+Database changed
+
+mysql> create table Stud_Marks(roll int primary key,name Varchar(25),
+total_marks int);
+Query OK, 0 rows affected (0.31 sec)
+
+mysql> create table Result(roll int primary key, class varchar(25));
+Query OK, 0 rows affected (0.79 sec)
+
+mysql> insert into Stud_Marks values
+    -> (3303,'Ashjkils',1499),
+    -> (3304,'Rana',969),
+    -> (3305,'Aghisu',850),
+    -> (3369,'Snoop Dogg',1469);
+Query OK, 4 rows affected (0.09 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> select * from Stud_Marks;
++------+------------+-------------+
+| roll | name       | total_marks |
++------+------------+-------------+
+| 3303 | Ashjkils   |        1499 |
+| 3304 | Rana       |         969 |
+| 3305 | Aghisu     |         850 |
+| 3369 | Snoop Dogg |        1469 |
++------+------------+-------------+
+4 rows in set (0.00 sec)
+
+mysql> create function calc_grade(marks int) returns varchar(25) deterministic
+    -> begin
+    -> declare grade varchar(25);
+    -> if marks <=1500 and marks >= 990 then
+    -> set grade = 'Distinction';
+    -> elseif marks >= 900 then
+    -> set grade = 'First Class';
+    -> elseif marks >= 825 then
+    -> set grade = 'Second Class';
+    -> else set grade = 'Pass';
+    -> end if;
+    -> return grade;
+    -> end //
+Query OK, 0 rows affected (0.12 sec)
+
+mysql> create procedure set_grade(in roll int)
+create procedure set_grade(in roll int)
+^C
+mysql> create procedure set_grade(in roll int)
+    -> begin
+    -> declare grade varchar(25);
+    -> declare marks_obt int;
+    -> declare exit handler for sqlexception
+    -> select 'Unexpected Error!';
+    -> select total_marks into marks_obt from Stud_Marks where Stud_Marks.roll = roll;
+    -> select calc_grade(marks_obt) into grade;
+    -> insert into Result values(roll, grade);
+    -> end //
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> delimiter ;
+mysql> 
+mysql> call set_grade(3303);
+Query OK, 1 row affected (0.08 sec)
+
+mysql> call set_grade(3304);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> call set_grade(3305);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> call set_grade(3369);
+Query OK, 1 row affected (0.07 sec)
+
+mysql> select * from Result;
++------+--------------+
+| roll | class        |
++------+--------------+
+| 3303 | Distinction  |
+| 3304 | First Class  |
+| 3305 | Second Class |
+| 3369 | Distinction  |
++------+--------------+
+4 rows in set (0.00 sec)
+
+mysql> insert into Stud_Marks values(3311,'Brock',420);
+Query OK, 1 row affected (0.07 sec)
+
+mysql> select * from Result;
++------+--------------+
+| roll | class        |
++------+--------------+
+| 3303 | Distinction  |
+| 3304 | First Class  |
+| 3305 | Second Class |
+| 3311 | Pass         |
+| 3369 | Distinction  |
++------+--------------+
+5 rows in set (0.00 sec)
+
+

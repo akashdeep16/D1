@@ -1,0 +1,134 @@
+mysql> show databases
+    -> ;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| LIBRARY3304        |
+| area3304           |
+| grade3304          |
+| lib3304            |
+| library_3352       |
+| library_3353       |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+10 rows in set (0.02 sec)
+
+mysql> create database cursor3304
+    -> ;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> use cursor3304;
+Database changed
+mysql> create table O_RollCall(roll_no int primary key, name varchar(50), branch varchar(10));
+Query OK, 0 rows affected (0.27 sec)
+
+mysql> insert into O_RollCall values
+    -> (3302,"aaa","class a"),
+    -> (3306,"bbbB","class a"),
+    -> (3334,"eee","class r"),
+    -> (3340,"fff","class g");
+Query OK, 4 rows affected (0.04 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> create table N_RollCall(roll_no int primary key, name varchar(50), branch varchar(10));
+Query OK, 0 rows affected (0.27 sec)
+
+mysql> insert into N_RollCall values
+    -> (3302,"aaa","class a"),
+    -> (3306,"bbbB","class a"),
+    -> (3345,"jjj","class t");
+Query OK, 3 rows affected (0.06 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select * from O_RollCall;
++---------+------+---------+
+| roll_no | name | branch  |
++---------+------+---------+
+|    3302 | aaa  | class a |
+|    3306 | bbbB | class a |
+|    3334 | eee  | class r |
+|    3340 | fff  | class g |
++---------+------+---------+
+4 rows in set (0.00 sec)
+
+mysql> select * from N_RollCall;
++---------+------+---------+
+| roll_no | name | branch  |
++---------+------+---------+
+|    3302 | aaa  | class a |
+|    3306 | bbbB | class a |
+|    3345 | jjj  | class t |
++---------+------+---------+
+3 rows in set (0.00 sec)
+
+mysql> delimiter //
+\mysql> ;
+    -> //
+ERROR 1065 (42000): Query was empty
+mysql> end ;;
+    -> end //
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'end ;;
+end' at line 1
+mysql> delimiter //
+mysql> create procedure old_to_new()
+    -> begin
+    -> declare finished int default 0;
+    -> declare current_roll int;
+    -> declare current_name varchar(50);
+    -> declare current_branch varchar(10);
+    -> declare current cursor for select * from O_RollCall;
+    -> declare continue handler for not found set finished = 1;
+    -> open current;
+    -> ilabel: loop
+    -> fetch current into current_roll,current_name, current_branch;
+    -> if current_roll not in (select roll_no from N_RollCall) then
+    -> insert into N_RollCall
+    -> values (current_roll, current_name, current_branch);
+    -> end if;
+    -> if finished = 1 then
+    -> leave ilabel;
+    -> end if;
+    -> end loop ilabel;
+    -> close current;
+    -> end//
+Query OK, 0 rows affected, 3 warnings (0.05 sec)
+
+mysql> call old_to_new();
+    -> /
+    -> /
+    -> //
+Query OK, 0 rows affected (0.06 sec)
+
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '/
+/' at line 1
+mysql> call old_to_new(); //
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> Select * from O_RollCall; //
++---------+------+---------+
+| roll_no | name | branch  |
++---------+------+---------+
+|    3302 | aaa  | class a |
+|    3306 | bbbB | class a |
+|    3334 | eee  | class r |
+|    3340 | fff  | class g |
++---------+------+---------+
+4 rows in set (0.00 sec)
+
+mysql> Select * from N_RollCall; //
++---------+------+---------+
+| roll_no | name | branch  |
++---------+------+---------+
+|    3302 | aaa  | class a |
+|    3306 | bbbB | class a |
+|    3334 | eee  | class r |
+|    3340 | fff  | class g |
+|    3345 | jjj  | class t |
++---------+------+---------+
+5 rows in set (0.00 sec)
+
+mysql> 
+
